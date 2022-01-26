@@ -1,7 +1,7 @@
 package GeeRPC
 
 import (
-	"ZainLiu_github.com/GeeRPC/codec"
+	"GeeRPC/codec"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,15 +15,15 @@ const MagicNumber = 0x3bf5c
 
 type Option struct {
 	MagicNumber int
-	CodecType codec.Type
+	CodecType   codec.Type
 }
 
 var DefaultOption = &Option{
 	MagicNumber: MagicNumber,
-	CodecType: codec.GobType,
+	CodecType:   codec.GobType,
 }
 
-type Server struct {}
+type Server struct{}
 
 func NewServer() *Server {
 	return &Server{}
@@ -31,10 +31,8 @@ func NewServer() *Server {
 
 var DefaultServer = NewServer()
 
-
-
-func (server *Server) ServeConn(conn io.ReadWriteCloser)  {
-	defer func() {_ = conn.Close()}()
+func (server *Server) ServeConn(conn io.ReadWriteCloser) {
+	defer func() { _ = conn.Close() }()
 	var opt Option
 	if err := json.NewDecoder(conn).Decode(&opt); err != nil {
 		log.Println("rpc server: options errors:", err)
@@ -53,7 +51,7 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser)  {
 	server.ServeConn(f(conn))
 }
 
-var invalidRequest = struct {}{}
+var invalidRequest = struct{}{}
 
 func (server *Server) serveCodec(cc codec.Codec) {
 	sending := new(sync.Mutex)
@@ -71,7 +69,7 @@ func (server *Server) serveCodec(cc codec.Codec) {
 }
 
 type request struct {
-	h *codec.Header
+	h            *codec.Header
 	argv, replyv reflect.Value
 }
 
@@ -99,7 +97,7 @@ func (server *Server) readRquest(cc codec.Codec) (*request, error) {
 	return req, nil
 }
 
-func (server *Server) sendResponse(cc codec.Codec, h *codec.Header, body interface{}, sending *sync.Mutex)  {
+func (server *Server) sendResponse(cc codec.Codec, h *codec.Header, body interface{}, sending *sync.Mutex) {
 	sending.Lock()
 	defer sending.Unlock()
 	if err := cc.Write(h, body); err != nil {
@@ -124,5 +122,3 @@ func (server *Server) Accept(lis net.Listener) {
 		//go server.S
 	}
 }
-
-
