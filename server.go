@@ -48,7 +48,7 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser) {
 		return
 	}
 	// todo 待完成
-	server.ServeConn(f(conn))
+	server.serveCodec(f(conn))
 }
 
 var invalidRequest = struct{}{}
@@ -64,8 +64,13 @@ func (server *Server) serveCodec(cc codec.Codec) {
 			}
 			req.h.Error = err.Error()
 			server.sendResponse(cc, req.h, invalidRequest, sending)
+			continue
 		}
+		wg.Add(1)
+		go server.handleRequest(cc, req, sending, wg)
 	}
+	wg.Wait()
+	_ = cc.Close()
 }
 
 type request struct {
@@ -119,6 +124,9 @@ func (server *Server) Accept(lis net.Listener) {
 			log.Println("rpc server: accept error:", err)
 			return
 		}
-		//go server.S
+		go server.ServeConn(conn)
 	}
+}
+func Accept(lis net.Listener) {
+	DefaultServer.Accept(lis)
 }
